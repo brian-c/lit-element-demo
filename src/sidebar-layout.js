@@ -1,158 +1,75 @@
-import '@webcomponents/webcomponentsjs';
 import { LitElement, html, css } from 'lit-element';
+import SwipeObserver from './helpers/swipe-observer';
 
-class SidebarLayout extends LitElement {
-	static get styles() {
-		return css`
-			:host {
-				--sidebar-max-width: 33%;
-				--sidebar-overlapping-width: 85%;
-				--sidebar-transition: 0.3s;
-			}
-
-			.width-comparator {
-				height: 1px;
-				opacity: 0;
-				pointer-events: none;
-				position: absolute;
-				width: var(--sidebar-max-width);
-			}
-
-			.sidebar {
-				bottom: 0;
-				display: flex;
-				left: 0;
-				max-width: var(--sidebar-overlapping--width);
-				-webkit-overflow-scrolling: touch;
-				position: fixed;
-				top: 0;
-				transform: translateX(-100%);
-				transition: transform var(--sidebar-transition);
-				z-index: 1;
-			}
-
-			.sidebar > ::slotted(*) {
-				overflow: auto;
-			}
-
-			:host([overlapping]) > .sidebar {
-				max-width: var(--sidebar-overlapping--width);
-			}
-
-			:host([open]) > .sidebar {
-				transform: translateX(calc(-100% * var(--sidebar-swiping-closed, 0)));
-			}
-
-			:host([swiping-closed]) > .sidebar {
-				transition: none;
-			}
-
-			.underlay {
-				background: linear-gradient(90deg, #0003, #0000);
-				bottom: 0;
-				left: 0;
-				position: fixed;
-				right: 0;
-				top: 0;
-				transform: translateX(-100%);
-				transition: transform var(--sidebar-transition);
-			}
-
-			:host([open]) > .underlay {
-				transform: translateX(calc(-100% * var(--sidebar-swiping-closed, 0)));
-			}
-
-			:host([swiping-closed]) > .underlay {
-				transition: none;
-			}
-
-			.content {
-				transition: margin-left var(--sidebar-transition);
-			}
-
-			:host([open]:not([overlapping])) > .content {
-				margin-left: calc(var(--sidebar-actual-width) * (1 - var(--sidebar-swiping-closed, 0)));
-			}
-
-			:host([swiping-closed]) > .content {
-				transition: none;
-			}
-		`;
-	}
-
+export default class SidebarLayout extends LitElement {
 	static get properties() {
 		return {
 			open: { type: Boolean, reflect: true },
 			overlapping: { type: Boolean, reflect: true },
-			swipeTouch: { type: Object, reflect: true, attribute: 'swiping-closed' },
+			swiping: { type: Boolean, reflect: true },
 		};
 	}
 
 	constructor() {
 		super(...arguments);
 		this.handleResize = this.handleResize.bind(this);
-		this.handleSidebarTouchMove = this.handleSidebarTouchMove.bind(this);
-		this.handleSidebarTouchEnd = this.handleSidebarTouchEnd.bind(this);
+		this.handleSidebarSwipe = this.handleSidebarSwipe.bind(this);
 
 		this.open = false;
 	}
 
 	firstUpdated() {
 		super.firstUpdated(...arguments);
-
 		this.widthComparator = this.shadowRoot.querySelector('.width-comparator');
 		this.sidebar = this.shadowRoot.querySelector('.sidebar');
+		this.content = this.shadowRoot.querySelector('.content');
 
-		addEventListener('resize', this.handleResize);
+		this.sidebarSwipeObserver = new SwipeObserver(this.sidebar, this.handleSidebarSwipe);
+		window.addEventListener('resize', this.handleResize);
+
 		this.handleResize();
 	}
 
+  updated(changedProperties) {
+		super.updated(...arguments);
+		if (changedProperties.has('open')) {
+			this.dispatchEvent(new CustomEvent('toggle'));
+		}
+  }
+
 	disconnectedCallback() {
 		super.disconnectedCallback(...arguments);
-		removeEventListener('resize', this.handleResize);
+		this.sidebarSwipeObserver.destroy();
+		window.removeEventListener('resize', this.handleResize);
 	}
 
 	handleResize() {
 		clearTimeout(this.resizeTimeout);
-
 		this.resizeTimeout = setTimeout(() => {
 			this.overlapping = this.widthComparator.offsetWidth < this.sidebar.offsetWidth;
 			this.style.setProperty('--sidebar-actual-width', `${this.sidebar.offsetWidth}px`);
 		}, 50);
 	}
 
-	handleSidebarTouchStart(event) {
-		if (event.touches.length !== 1) { return; }
-		this.swipeTouch = event.touches[0];
-		this.addEventListener('touchmove', this.handleSidebarTouchMove);
-		this.addEventListener('touchend', this.handleSidebarTouchEnd);
-	}
+	handleSidebarSwipe({dx, done}, event) {
+		const swipeAmount = Math.max(0, dx) / this.sidebar.offsetWidth;
 
-	handleSidebarTouchMove(event) {
-		const touches = [...event.changedTouches];
-		const movedTouch = touches.find(t => t.identifier === this.swipeTouch.identifier);
-		if (!movedTouch) { return; }
+		if (!done) {
+			this.swiping = true;
+			this.style.setProperty('--sidebar-swipe-progress', swipeAmount);
+			event.preventDefault();
+		} else {
+			const computedStyle = getComputedStyle(this);
+			const thresholdValue = computedStyle.getPropertyValue('--sidebar-swipe-threshold');
+			const swipeThreshold = parseFloat(thresholdValue);
 
-		const swipeDistance = this.swipeTouch.pageX - movedTouch.pageX;
-		const swipeAmount = Math.max(0, swipeDistance) / this.sidebar.offsetWidth;
-		this.style.setProperty('--sidebar-swiping-closed', swipeAmount);
-	}
+			if (swipeAmount > swipeThreshold) {
+				this.open = false;
+			}
 
-	handleSidebarTouchEnd(event) {
-		const touches = [...event.changedTouches];
-		const endedTouch = touches.find(t => t.identifier === this.swipeTouch.identifier);
-		if (!endedTouch) { return; }
-
-		this.removeEventListener('touchmove', this.handleSidebarTouchMove);
-		this.removeEventListener('touchend', this.handleSidebarTouchEnd);
-
-		const swipeDistance = this.swipeTouch.pageX - endedTouch.pageX;
-		if (swipeDistance / this.sidebar.offsetWidth > 2/3) {
-			this.open = false;
+			this.swiping = false;
+			this.style.removeProperty('--sidebar-swipe-progress');
 		}
-
-		this.swipeTouch = null;
-		this.style.removeProperty('--sidebar-swiping-closed');
 	}
 
 	toggle() {
@@ -161,23 +78,120 @@ class SidebarLayout extends LitElement {
 
 	render() {
 		return html`
+			<style>
+				:host {
+					--sidebar-max-width: 33%;
+					--sidebar-overlapped-max-width: 85%;
+					--sidebar-swipe-threshold: 0.5;
+					--sidebar-transition-duration: 0.5s;
+				}
+
+				:host([swiping]) {
+					--sidebar-swipe-progress-opacity: calc(
+						(1 - var(--sidebar-swipe-progress, 0))
+						* (1 / (1 - var(--sidebar-swipe-threshold)))
+					);
+				}
+
+				.width-comparator {
+					height: 1px;
+					opacity: 0;
+					pointer-events: none;
+					position: absolute;
+					width: var(--sidebar-max-width);
+				}
+
+				.sidebar {
+					bottom: 0;
+					display: flex;
+					left: 0;
+					max-width: var(--sidebar-overlapped-max-width);
+					-webkit-overflow-scrolling: touch;
+					position: fixed;
+					top: 0;
+					transform: translateX(-100%);
+					transition:
+						opacity var(--sidebar-transition-duration), /* Hide the jump when releasing a swipe */
+						transform var(--sidebar-transition-duration);
+					z-index: 2;
+				}
+
+				.sidebar > ::slotted(*) {
+					overflow: auto;
+				}
+
+				:host([overlapping]) > .sidebar {
+					max-width: var(--sidebar-overlapped-max-width);
+				}
+				:host([open]) > .sidebar {
+					transform: translateX(calc(-100% * var(--sidebar-swipe-progress, 0)));
+					opacity: var(--sidebar-swipe-progress-opacity);
+				}
+
+				:host([swiping]) > .sidebar {
+					transition: none;
+				}
+
+				.underlay {
+					background: var(--sidebar-underlay-background, #8883);
+					bottom: 0;
+					left: 0;
+					opacity: 0;
+					position: fixed;
+					right: 0;
+					top: 0;
+					transform: translateX(-100%);
+					transition: /* Fade out, delay before snapping offscreen */
+						opacity var(--sidebar-transition-duration),
+						transform 0s linear var(--sidebar-transition-duration);
+					z-index: 1;
+				}
+
+				:host([open]) > .underlay {
+					opacity: var(--sidebar-swipe-progress-opacity);
+					transform: translateX(0);
+					transition: /* Snap into place while fading in */
+						opacity var(--sidebar-transition-duration),
+						transform 0.01ms;
+				}
+
+				:host([swiping]) > .underlay {
+					transition: none;
+				}
+
+				.content {
+					transition: margin-left var(--sidebar-transition-duration);
+				}
+				:host([open]:not([overlapping])) > .content {
+					margin-left: calc(var(--sidebar-actual-width) * (1 - var(--sidebar-swipe-progress, 0)));
+				}
+
+				:host([swiping]) > .content {
+					transition: none;
+				}
+			</style>
 			<div class="width-comparator"></div>
 
 			<div
 				class="sidebar"
-				@touchstart="${this.handleSidebarTouchStart}"
+				?inert="${!this.open}"
 			>
 				<slot name="sidebar"></slot>
 			</div>
 
-			${this.overlapping ? html`
+			${this.overlapping ? (html`
 				<div
 					class="underlay"
-					@click="${this.toggle}"
+					@click="${() => this.open = false}"
 				></div>
-			` : null}
+			`) : (
+				null
+			)}
 
-			<div class="content">
+			<div
+				class="content"
+				?inert="${this.open && this.overlapping}"
+			>
 				<slot></slot>
 			</div>
 		`;

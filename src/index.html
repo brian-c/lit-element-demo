@@ -3,37 +3,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Document</title>
 
+<script src="./polyfills.js"></script>
 <script src="./sidebar-layout.js"></script>
+<script src="./dialog.js"></script>
 
 <style>
 	body {
+		font-family: serif;
 		margin: 1em;
 	}
 
 	.sidebar {
-		background: #eee;
+		background: #fff;
+		box-shadow: 0 0 0 #0000;
 		color: #666;
+		font-family: sans-serif;
 		padding: 1em;
-		width: 40ch;
+		transition: box-shadow 1s;
+		width: 30ch;
+	}
+
+	bc-sidebar-layout:not([overlapping]) .sidebar {
+		background: #eee;
+	}
+
+	bc-sidebar-layout[overlapping][open] .sidebar {
+		box-shadow: 0 0 2em #0006;
+	}
+
+	bc-sidebar-layout .overlay {
+		background-color: #0003;
 	}
 
 	.toolbar {
 		left: 0;
 		position: sticky;
+		text-align: center;
 		top: 1em;
+	}
+
+	.dialog {
+		background: white;
+		box-shadow: 0 5px 15px #0003;
+		max-height: 90%;
+		max-width: 90%;
+		overflow: auto;
+		padding: 1em;
 	}
 </style>
 
 <bc-sidebar-layout id="sbl">
 	<div slot="sidebar" class="sidebar">
-		<button type="button" onclick="document.getElementById('sbl').open = false">&times;</button>
+		<button type="button" onclick="document.getElementById('sbl').open = false">&times; Close</button>
 		<p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Nulla architecto odit ducimus quod natus accusantium incidunt vitae praesentium amet enim, ipsa at eveniet neque quis reprehenderit vero reiciendis veritatis voluptates!</p>
 		<p>Expedita aut harum, aliquam alias cumque nam blanditiis praesentium tenetur voluptatum voluptatibus libero et tempora, placeat ex mollitia repudiandae doloremque eligendi aliquid odit ea corrupti sit. Voluptas tempore atque assumenda?</p>
 		<p>Quo officia nulla sit doloribus molestiae beatae eius facere assumenda quidem, doloremque tempore a? Ipsam facilis necessitatibus saepe nisi officiis. Sunt fugit sapiente nam velit deleniti iusto officiis optio ex.</p>
 	</div>
 
 	<div class="toolbar">
-		<button type="button" onclick="document.getElementById('sbl').toggle()">&#9776;</button>
+		<button type="button" onclick="document.getElementById('sbl').toggle()">&#9776; Menu</button>
+		<button type="button" onclick="openADialog()">Open a dialog</button>
 	</div>
 
 	<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime facilis excepturi quod obcaecati alias, sapiente libero illum iusto quam quaerat error voluptates reiciendis, veniam voluptate earum quibusdam distinctio provident? Provident.</p>
@@ -67,3 +96,47 @@
 	<p>Vitae, impedit eum distinctio temporibus totam sequi ducimus neque, enim ea facere illum ipsa alias magnam! Ea recusandae explicabo odit placeat? Non error aspernatur ex quia nulla deleniti in similique.</p>
 	<p>Natus, minima rem ratione vel, ipsam tenetur ex laborum maiores obcaecati facere architecto voluptate? Odit sapiente temporibus porro doloribus tenetur id quo, minima aliquam illo veritatis eveniet quasi nisi sint.</p>
 </bc-sidebar-layout>
+
+<template id="dialog-template">
+	<bc-dialog id="d">
+		<div class="dialog">
+			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequatur hic eligendi aliquam praesentium, voluptas sit dolor cupiditate unde nulla necessitatibus totam perspiciatis in numquam facilis, magnam excepturi tenetur provident consequuntur.</p>
+			<p>Vero qui incidunt accusantium suscipit, ex quasi repellendus tenetur veniam hic quo similique rerum obcaecati expedita ea eius molestias dolores ab ducimus ipsum praesentium placeat mollitia error blanditiis repellat. Aspernatur!</p>
+			<p>Itaque quia repudiandae fugit. Odio, inventore hic eaque, nemo aliquam nostrum impedit ut necessitatibus, a voluptatum iusto consequuntur delectus! Tempora corrupti exercitationem nihil necessitatibus ipsam debitis voluptate deserunt dolorem sed?</p>
+
+			<details>
+				<summary>More...</summary>
+				<p>Nesciunt doloribus nemo laborum dolores quia earum quae in totam, sit dolore debitis dicta enim aut expedita ipsum dignissimos excepturi saepe sapiente? Accusantium, incidunt? Illum earum eaque natus atque ratione.</p>
+				<p>Suscipit expedita facere, nemo iste fuga beatae quisquam vel dolores voluptatibus est tempore quam ad quaerat consectetur velit, eos eaque repellat ab quibusdam in alias similique. Error repellendus corrupti itaque.</p>
+				<p>Dolorum, beatae debitis. Fugit earum nesciunt dolores qui voluptatum excepturi libero assumenda, suscipit sed unde, quibusdam, corporis aut? Cum commodi laborum ducimus ullam quidem adipisci itaque mollitia debitis nulla praesentium.</p>
+				<p>Id vero a nemo quidem iure, cum rem repellat? Sit accusantium eaque et corrupti adipisci ratione aspernatur? Qui, veritatis minus. Consequatur ratione ullam, esse consectetur maiores minima voluptatum animi beatae!</p>
+				<p>Odio incidunt fugit aliquam quibusdam, accusamus commodi autem quis ratione dignissimos illum aperiam nesciunt sunt consequatur pariatur omnis sequi similique explicabo saepe unde hic nemo? Culpa fugiat eveniet laudantium vero!</p>
+				<p>Mollitia, non! Consequuntur asperiores reiciendis voluptas porro laborum sed quae eligendi praesentium nam libero earum, minus quos rerum eum aut dicta quisquam atque accusamus error, sint dolores blanditiis dolor quis?</p>
+				<p>Quidem delectus molestiae provident modi debitis. Suscipit nemo eum molestias repellat culpa beatae ex officiis saepe aspernatur consectetur iusto quis odit minus unde, qui facere enim dignissimos consequuntur laudantium ducimus!</p>
+				<p>Iusto quae ipsum quibusdam excepturi alias error voluptates exercitationem ipsam, ratione expedita maiores quia cumque perspiciatis, facere ex laudantium natus doloremque saepe porro itaque odio unde. At quam sed possimus!</p>
+				<p>Cum, in nemo suscipit eum facere expedita fuga explicabo a magni beatae ad et natus? Ex officia eum consequatur temporibus neque error illum harum dolorem fugiat at, itaque magnam fuga?</p>
+				<p>Repellat magni dolorum mollitia deleniti dignissimos veniam a odio ipsam! Possimus ipsam repellat itaque placeat veniam delectus eligendi inventore quos officiis laborum eius aliquid, id nesciunt. Quae veritatis quos explicabo.</p>
+				<p>Modi ipsum autem beatae perferendis, reiciendis nam, sit tempore, deserunt corporis alias esse? Libero quis a vitae! Voluptate atque rem doloribus, recusandae rerum eius aliquid dicta officiis excepturi eveniet dolores.</p>
+				<p>Fugiat vel quibusdam esse magnam reiciendis odio, reprehenderit modi atque ipsum quam facere iure hic architecto doloremque non omnis ab dolorum cumque itaque tempora corporis mollitia adipisci culpa et! Voluptatem.</p>
+			</details>
+			<p>
+				<button type="button" onclick="document.getElementById('d').dismiss()">&times; Close</button>
+			</p>
+		</div>
+	</bc-dialog>
+</template>
+
+<script>
+	function openADialog() {
+		const template = document.getElementById('dialog-template');
+		document.body.insertAdjacentHTML('beforeEnd', template.innerHTML);
+	}
+
+	addEventListener('dismiss', function(event) {
+		event.target.remove();
+	});
+
+	document.getElementById('sbl').addEventListener('toggle', event => {
+		console.log('Sidebar toggled', 'Open:', event.target.open);
+	});
+	</script>
