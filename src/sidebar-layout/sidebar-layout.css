@@ -1,0 +1,93 @@
+:host {
+	--sidebar-max-width: 33%;
+	--sidebar-overlapped-max-width: 85%;
+	--sidebar-swipe-threshold: 0.5;
+	--sidebar-transition-duration: 0.5s;
+}
+
+:host([swiping]) {
+	--sidebar-swipe-progress-opacity: calc(
+		(1 - var(--sidebar-swipe-progress, 0))
+		* (1 / (1 - var(--sidebar-swipe-threshold)))
+	);
+}
+
+#width-comparator {
+	height: 1px;
+	left: 0;
+	pointer-events: none;
+	position: fixed;
+	top: 0;
+	width: var(--sidebar-max-width);
+}
+
+#sidebar {
+	bottom: 0;
+	display: flex;
+	left: 0;
+	max-width: var(--sidebar-overlapped-max-width);
+	-webkit-overflow-scrolling: touch;
+	position: fixed;
+	top: 0;
+	transform: translateX(-100%);
+	transition:
+		opacity var(--sidebar-transition-duration), /* Hide the jump when releasing a swipe */
+		transform var(--sidebar-transition-duration);
+	z-index: 2;
+}
+
+#sidebar > ::slotted(*) {
+	overflow: auto;
+}
+
+:host([overlapping]) > #sidebar {
+	max-width: var(--sidebar-overlapped-max-width);
+}
+
+:host([open]) > #sidebar {
+	transform: translateX(calc(-100% * var(--sidebar-swipe-progress, 0)));
+	opacity: var(--sidebar-swipe-progress-opacity);
+}
+
+:host([swiping]) > #sidebar {
+	transition: none;
+}
+
+#underlay {
+	background: var(--sidebar-underlay-background, #8883);
+	bottom: 0;
+	left: 0;
+	opacity: 0;
+	position: fixed;
+	right: 0;
+	top: 0;
+	transform: translateX(-100%);
+	transition: /* Fade out, delay before snapping offscreen */
+		opacity var(--sidebar-transition-duration),
+		transform 0s linear var(--sidebar-transition-duration);
+	z-index: 1;
+}
+
+:host([open]) > #underlay {
+	opacity: var(--sidebar-swipe-progress-opacity);
+	transform: translateX(0);
+	transition: /* Snap into place while fading in */
+		opacity var(--sidebar-transition-duration),
+		transform 0.01ms;
+}
+
+:host([swiping]) > #underlay {
+	transition: none;
+}
+
+#content {
+	transition: margin-left var(--sidebar-transition-duration);
+}
+
+:host([open]:not([overlapping])) > #content {
+	margin-left: calc(var(--sidebar-actual-width) * (1 - var(--sidebar-swipe-progress, 0)));
+}
+
+:host([swiping]) > #content {
+	transition: none;
+}

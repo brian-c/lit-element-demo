@@ -1,0 +1,27 @@
+#underlay {
+	background: var(--dialog-underlay-background, #8886);
+	bottom: 0;
+	left: 0;
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 2;
+}
+
+#content {
+	align-items: center;
+	bottom: 0;
+	display: flex;
+	justify-content: center;
+	left: 0;
+	overflow: auto;
+	pointer-events: none;
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 3;
+}
+
+#content > ::slotted(*) {
+	pointer-events: auto;
+}
