@@ -1,4 +1,5 @@
 import template from './dialog.html';
+import style from './dialog.css';
 
 const BODY_STYLE_ID = 'dialog-body';
 
@@ -46,7 +47,10 @@ class Dialog extends HTMLElement {
 		}
 
 		this.attachShadow({ mode: 'open' });
-		this.shadowRoot.innerHTML = template;
+		this.shadowRoot.innerHTML = `
+			<style>${style}</style>
+			${template}
+		`;
 		this._underlay = this.shadowRoot.getElementById('underlay');
 	}
 

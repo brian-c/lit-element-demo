@@ -1,5 +1,6 @@
 import SwipeObserver from '../helpers/swipe-observer';
 import template from './sidebar-layout.html';
+import style from './sidebar-layout.css';
 
 const RESIZE_DEBOUNCE = 15;
 
@@ -41,7 +42,10 @@ class SidebarLayout extends HTMLElement {
 		this._resizeTimeout = NaN;
 
 		this.attachShadow({ mode: 'open' });
-		this.shadowRoot.innerHTML = template;
+		this.shadowRoot.innerHTML = `
+			<style>${style}</style>
+			${template}
+		`;
 		this._widthComparator = this.shadowRoot.getElementById('width-comparator');
 		this._underlay = this.shadowRoot.getElementById('underlay');
 		this._sidebar = this.shadowRoot.getElementById('sidebar');

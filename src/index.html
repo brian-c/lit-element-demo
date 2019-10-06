@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Document</title>
+<title>Web components demo</title>
 
 <script src="./polyfills.js"></script>
-<script src="./dialog/dialog.js"></script>
-<script src="./dialog/dialog-safe-area.js"></script>
-<script src="./sidebar-layout/sidebar-layout.js"></script>
+
+<!--Rollup-built files:-->
+<script src="../dialog.js"></script>
+<script src="../dialog/safe-area.js"></script>
+<script src="../sidebar-layout.js"></script>
 
 <style>
 	:root {
@@ -151,4 +153,4 @@
 	document.getElementById('sbl').addEventListener('toggle', event => {
 		console.log('Sidebar toggled, open:', event.target.open);
 	});
-	</script>
+</script>

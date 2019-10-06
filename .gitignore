@@ -2,3 +2,9 @@
 /dist
 /node_modules
 /package-lock.json
+
+# Built files:
+/dialog
+/dialog.js
+/helpers
+/sidebar-layout.js
