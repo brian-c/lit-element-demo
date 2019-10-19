@@ -6,15 +6,13 @@ const cssnano = require('cssnano');
 
 module.exports = {
 	input: {
-		'dialog': './src/dialog/dialog.js',
-		'dialog/safe-area': './src/dialog/dialog-safe-area.js',
-		'helpers/swipe-observer': './src/helpers/swipe-observer.js',
-		'sidebar-layout': './src/sidebar-layout/sidebar-layout.js'
+		'index': './src/index.js'
 	},
 
 	output: {
 		dir: './',
-		format: 'cjs'
+		format: 'umd',
+		name: 'BcWebComponents'
 	},
 
 	plugins: [

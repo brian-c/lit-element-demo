@@ -3,12 +3,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Web components demo</title>
 
+<!--Parcel-built:-->
 <script src="./polyfills.js"></script>
 
-<!--Rollup-built files:-->
-<script src="../dialog.js"></script>
-<script src="../dialog/safe-area.js"></script>
-<script src="../sidebar-layout.js"></script>
+<!--Rollup-built:-->
+<script src="../index.js"></script>
 
 <style>
 	:root {
@@ -53,7 +52,7 @@
 		--dialog-underlay-background: var(--custom-underlay);
 	}
 
-	.dialog {
+	.dialog-content {
 		background: white;
 		box-shadow: 0 5px 15px #0003;
 		max-height: 90%;
@@ -61,22 +60,51 @@
 		overflow: auto;
 		padding: 1em;
 	}
+
+	.notification-content {
+		backdrop-filter: blur(1px);
+		background: #888e;
+		border-radius: 3px;
+		color: white;
+		font-family: sans-serif;
+		font-size: 0.8em;
+		margin: 1em;
+		padding: 1em;
+	}
+
+	.notification-content > :first-child {
+		margin-top: 0;
+	}
+
+	.notification-content > :last-child {
+		margin-bottom: 0;
+	}
 </style>
 
 <bc-dialog-safe-area>
-	<bc-sidebar-layout id="sbl">
+	<bc-sidebar-layout id="sidebar-layout">
 		<div slot="sidebar" class="sidebar">
-			<button type="button" onclick="document.getElementById('sbl').open = false">&times; Close</button>
-			<button type="button" onclick="openADialog()">Open a dialog</button>
+			<button type="button" onclick="document.getElementById('sidebar-layout').open = false">&times; Close</button>
+			<button type="button" onclick="createADialog()">Create a new dialog</button>
+			<button type="button" onclick="createANotification()">Create a new notification</button>
 			<p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Nulla architecto odit ducimus quod natus accusantium incidunt vitae praesentium amet enim, ipsa at eveniet neque quis reprehenderit vero reiciendis veritatis voluptates!</p>
 			<p>Expedita aut harum, aliquam alias cumque nam blanditiis praesentium tenetur voluptatum voluptatibus libero et tempora, placeat ex mollitia repudiandae doloremque eligendi aliquid odit ea corrupti sit. Voluptas tempore atque assumenda?</p>
 			<p>Quo officia nulla sit doloribus molestiae beatae eius facere assumenda quidem, doloremque tempore a? Ipsam facilis necessitatibus saepe nisi officiis. Sunt fugit sapiente nam velit deleniti iusto officiis optio ex.</p>
 		</div>
 
 		<div class="toolbar">
-			<button type="button" onclick="document.getElementById('sbl').toggle()">&#9776; Menu</button>
-			<button type="button" onclick="openADialog()">Open a dialog</button>
+			<button type="button" onclick="document.getElementById('sidebar-layout').toggle()">&#9776; Menu</button>
+			<button type="button" onclick="createADialog()">Create a new dialog</button>
+			<button type="button" onclick="document.getElementById('existing-dialog').hidden = false;">Open a dialog</button>
 		</div>
+
+		<bc-dialog id="existing-dialog" hidden>
+			<div class="dialog-content">
+				<p>This dialog already exists</p>
+				<button type="button" onclick="document.getElementById('existing-dialog').hidden = true;">Close it</button>
+				<button type="button" onclick="document.getElementById('existing-dialog').remove();">Remove it entirely</button>
+			</div>
+		</bc-dialog>
 
 		<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime facilis excepturi quod obcaecati alias, sapiente libero illum iusto quam quaerat error voluptates reiciendis, veniam voluptate earum quibusdam distinctio provident? Provident.</p>
 		<p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus illo aliquam ex, error inventore eius deleniti dolores sequi at pariatur aspernatur quasi fuga debitis unde est optio expedita. Cupiditate, quia.</p>
@@ -109,11 +137,13 @@
 		<p>Vitae, impedit eum distinctio temporibus totam sequi ducimus neque, enim ea facere illum ipsa alias magnam! Ea recusandae explicabo odit placeat? Non error aspernatur ex quia nulla deleniti in similique.</p>
 		<p>Natus, minima rem ratione vel, ipsam tenetur ex laborum maiores obcaecati facere architecto voluptate? Odit sapiente temporibus porro doloribus tenetur id quo, minima aliquam illo veritatis eveniet quasi nisi sint.</p>
 	</bc-sidebar-layout>
+
+	<bc-notification-host></bc-notification-host>
 </bc-dialog-safe-area>
 
 <template id="dialog-template">
-	<bc-dialog id="d">
-		<div class="dialog">
+	<bc-dialog id="new-dialog">
+		<div class="dialog-content">
 			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequatur hic eligendi aliquam praesentium, voluptas sit dolor cupiditate unde nulla necessitatibus totam perspiciatis in numquam facilis, magnam excepturi tenetur provident consequuntur.</p>
 			<p>Vero qui incidunt accusantium suscipit, ex quasi repellendus tenetur veniam hic quo similique rerum obcaecati expedita ea eius molestias dolores ab ducimus ipsum praesentium placeat mollitia error blanditiis repellat. Aspernatur!</p>
 			<p>Itaque quia repudiandae fugit. Odio, inventore hic eaque, nemo aliquam nostrum impedit ut necessitatibus, a voluptatum iusto consequuntur delectus! Tempora corrupti exercitationem nihil necessitatibus ipsam debitis voluptate deserunt dolorem sed?</p>
@@ -133,24 +163,50 @@
 				<p>Modi ipsum autem beatae perferendis, reiciendis nam, sit tempore, deserunt corporis alias esse? Libero quis a vitae! Voluptate atque rem doloribus, recusandae rerum eius aliquid dicta officiis excepturi eveniet dolores.</p>
 				<p>Fugiat vel quibusdam esse magnam reiciendis odio, reprehenderit modi atque ipsum quam facere iure hic architecto doloremque non omnis ab dolorum cumque itaque tempora corporis mollitia adipisci culpa et! Voluptatem.</p>
 			</details>
+
 			<p>
-				<button type="button" onclick="document.getElementById('d').dismiss()">&times; Close</button>
+				<button type="button" onclick="this.closest('bc-dialog').dismiss()">&times; Close</button>
 			</p>
 		</div>
 	</bc-dialog>
 </template>
 
+<template id="notification-template">
+	<bc-notification onclick="this.remove()">
+		<div class="notification-content">
+			<p class="tweak-me">Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum enim ducimus quis, atque temporibus ratione aliquid beatae quisquam! Incidunt at illo commodi non. Cumque temporibus voluptatum quas dolor, nulla officia.</p>
+			<p>
+				<button type="button" onclick="this.closest('bc-notification').remove()">&times; Close</button>
+			</div>
+	</bc-notification>
+</template>
+
 <script>
-	function openADialog() {
+	function createADialog() {
 		const template = document.getElementById('dialog-template');
 		document.body.insertAdjacentHTML('beforeEnd', template.innerHTML);
 	}
 
-	addEventListener('dismiss', function(event) {
-		event.target.remove();
+	function createANotification() {
+		const template = document.getElementById('notification-template');
+		document.body.insertAdjacentHTML('beforeEnd', template.innerHTML);
+		const tweakMe = document.getElementsByClassName('tweak-me')[0];
+		const allLetters = tweakMe.textContent.split('');
+		const scrambledLetters = allLetters.sort(() => Math.random() - 0.5);
+		const trimmedLetters = scrambledLetters.slice(0, Math.floor(Math.random() * scrambledLetters.length));
+		tweakMe.innerHTML = trimmedLetters.slice().join('');
+		tweakMe.classList.remove('tweak-me');
+	}
+
+	addEventListener('dismiss', event => {
+		if (event.target.tagName === 'BC-DIALOG') {
+			event.target.remove();
+		}
 	});
 
-	document.getElementById('sbl').addEventListener('toggle', event => {
-		console.log('Sidebar toggled, open:', event.target.open);
+	addEventListener('toggle', event => {
+		if (event.target.tagName === 'BC-SIDEBAR-LAYOUT') {
+			console.log('Sidebar toggled, open:', event.target.open);
+		}
 	});
 </script>

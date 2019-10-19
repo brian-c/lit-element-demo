@@ -12,13 +12,13 @@ export default class DialogSafeArea extends HTMLElement {
 			return;
 		}
 
-		addEventListener('dialog-connect', this._handleDialogConnect);
-		addEventListener('dialog-disconnect', this._handleDialogDisconnect);
+		document.addEventListener('dialog-connect', this._handleDialogConnect);
+		document.addEventListener('dialog-disconnect', this._handleDialogDisconnect);
 	}
 
 	disconnectedCallback() {
-		removeEventListener('dialog-connect', this._handleDialogConnect);
-		removeEventListener('dialog-disconnect', this._handleDialogDisconnect);
+		document.removeEventListener('dialog-connect', this._handleDialogConnect);
+		document.removeEventListener('dialog-disconnect', this._handleDialogDisconnect);
 	}
 
 	_handleDialogChange(d) {

@@ -4,7 +4,7 @@ import style from './sidebar-layout.css';
 
 const RESIZE_DEBOUNCE = 15;
 
-class SidebarLayout extends HTMLElement {
+export default class SidebarLayout extends HTMLElement {
 	static get observedAttributes() {
 		return ['open', 'overlapping', 'swiping'];
 	}
