@@ -15,7 +15,9 @@ export default class Breadcrumb extends HTMLElement {
 	}
 
 	disconnectedCallback() {
-		this.target.remove();
+		if (this.target.isConnected) {
+			this.target.remove();
+		}
 	}
 }
 

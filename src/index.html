@@ -11,7 +11,7 @@
 
 <style>
 	:root {
-		--custom-underlay: #3693;
+		--custom-underlay: #0002;
 	}
 
 	body {
@@ -50,15 +50,30 @@
 
 	bc-dialog {
 		--dialog-underlay-background: var(--custom-underlay);
+		--dialog-underlay-fade-duration: 0.1s;
 	}
 
 	.dialog-content {
 		background: white;
 		box-shadow: 0 5px 15px #0003;
 		max-height: 90%;
-		max-width: 90%;
+		max-width: 70ch;
+		opacity: 1;
 		overflow: auto;
 		padding: 1em;
+		transition: opacity 0.2s, transform 0.2s;
+	}
+
+	bc-dialog[transitioning] > .dialog-content {
+		opacity: 0;
+	}
+
+	bc-dialog[transitioning="in"] > .dialog-content {
+		transform: scale(1.1);
+	}
+
+	bc-dialog[transitioning="out"] > .dialog-content {
+		transform: scale(0.8);
 	}
 
 	.notification-content {
@@ -69,7 +84,15 @@
 		font-family: sans-serif;
 		font-size: 0.8em;
 		margin: 1em;
+		opacity: 1;
 		padding: 1em;
+		transition: margin-bottom 0.3s, opacity 0.3s, transform 0.3s;
+	}
+
+	bc-notification[transitioning] > .notification-content {
+		opacity: 0;
+		margin-bottom: calc(-1 * var(--notification-height) - 1em);
+		transform: translateX(100%);
 	}
 
 	.notification-content > :first-child {
@@ -82,7 +105,7 @@
 </style>
 
 <bc-dialog-safe-area>
-	<bc-sidebar-layout id="sidebar-layout">
+	<bc-sidebar-layout open id="sidebar-layout">
 		<div slot="sidebar" class="sidebar">
 			<button type="button" onclick="document.getElementById('sidebar-layout').open = false">&times; Close</button>
 			<button type="button" onclick="createADialog()">Create a new dialog</button>
@@ -95,14 +118,13 @@
 		<div class="toolbar">
 			<button type="button" onclick="document.getElementById('sidebar-layout').toggle()">&#9776; Menu</button>
 			<button type="button" onclick="createADialog()">Create a new dialog</button>
-			<button type="button" onclick="document.getElementById('existing-dialog').hidden = false;">Open a dialog</button>
+			<button type="button" onclick="document.getElementById('existing-dialog').hidden = false;">Open an existing dialog</button>
 		</div>
 
 		<bc-dialog id="existing-dialog" hidden>
 			<div class="dialog-content">
 				<p>This dialog already exists</p>
 				<button type="button" onclick="document.getElementById('existing-dialog').hidden = true;">Close it</button>
-				<button type="button" onclick="document.getElementById('existing-dialog').remove();">Remove it entirely</button>
 			</div>
 		</bc-dialog>
 
@@ -138,7 +160,7 @@
 		<p>Natus, minima rem ratione vel, ipsam tenetur ex laborum maiores obcaecati facere architecto voluptate? Odit sapiente temporibus porro doloribus tenetur id quo, minima aliquam illo veritatis eveniet quasi nisi sint.</p>
 	</bc-sidebar-layout>
 
-	<bc-notification-host></bc-notification-host>
+	<bc-notification-host left top></bc-notification-host>
 </bc-dialog-safe-area>
 
 <template id="dialog-template">
@@ -166,15 +188,16 @@
 
 			<p>
 				<button type="button" onclick="this.closest('bc-dialog').dismiss()">&times; Close</button>
+				<button type="button" onclick="this.closest('bc-dialog').remove()">&times; Destroy</button>
 			</p>
 		</div>
 	</bc-dialog>
 </template>
 
 <template id="notification-template">
-	<bc-notification onclick="this.remove()">
+	<bc-notification>
 		<div class="notification-content">
-			<p class="tweak-me">Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum enim ducimus quis, atque temporibus ratione aliquid beatae quisquam! Incidunt at illo commodi non. Cumque temporibus voluptatum quas dolor, nulla officia.</p>
+			<p>__LOREM_IPSUM__</p>
 			<p>
 				<button type="button" onclick="this.closest('bc-notification').remove()">&times; Close</button>
 			</div>
@@ -187,20 +210,24 @@
 		document.body.insertAdjacentHTML('beforeEnd', template.innerHTML);
 	}
 
-	function createANotification() {
-		const template = document.getElementById('notification-template');
-		document.body.insertAdjacentHTML('beforeEnd', template.innerHTML);
-		const tweakMe = document.getElementsByClassName('tweak-me')[0];
-		const allLetters = tweakMe.textContent.split('');
+	function generateRandomText() {
+		const LOREM_IPSUM = 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum enim ducimus quis, atque temporibus ratione aliquid beatae quisquam! Incidunt at illo commodi non. Cumque temporibus voluptatum quas dolor, nulla officia.';
+		const allLetters = LOREM_IPSUM.split('');
 		const scrambledLetters = allLetters.sort(() => Math.random() - 0.5);
-		const trimmedLetters = scrambledLetters.slice(0, Math.floor(Math.random() * scrambledLetters.length));
-		tweakMe.innerHTML = trimmedLetters.slice().join('');
-		tweakMe.classList.remove('tweak-me');
+		const trimmedLetters = scrambledLetters.slice(0, Math.floor(Math.random() * scrambledLetters.length / 4));
+		return trimmedLetters.slice().join('');
+	}
+
+	function createANotification() {
+		const loremIpsum = generateRandomText();
+		const template = document.getElementById('notification-template').innerHTML;
+		const filledTemplate = template.replace('__LOREM_IPSUM__', loremIpsum);
+		document.body.insertAdjacentHTML('beforeEnd', filledTemplate);
 	}
 
 	addEventListener('dismiss', event => {
 		if (event.target.tagName === 'BC-DIALOG') {
-			event.target.remove();
+			event.target.hidden = true;
 		}
 	});
 

@@ -1,0 +1,4 @@
+body[data-dialog-open-count] {
+	overflow: hidden;
+	padding-right: var(--dialog-scrollbar-width, 0);
+}

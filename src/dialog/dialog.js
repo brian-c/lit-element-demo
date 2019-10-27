@@ -1,6 +1,8 @@
 import AutoMover from '../helpers/auto-mover';
 import template from './dialog.html';
 import style from './dialog.css';
+import openDialogBodyStyle from './open-dialog-body.css';
+import waitForTransitions from '../helpers/wait-for-transitions';
 
 const BODY_STYLE_ID = 'dialog-body-styles';
 
@@ -16,12 +18,9 @@ function updateScrollbarWidth() {
 }
 
 function injectBodyCss() {
-	document.body.insertAdjacentHTML('afterBegin', `
+	document.head.insertAdjacentHTML('afterBegin', `
 		<style id="${BODY_STYLE_ID}">
-			body[data-dialog-open-count] {
-				overflow: hidden;
-				padding-right: var(--dialog-scrollbar-width, 0);
-			}
+			${openDialogBodyStyle}
 		</style>
 	`);
 }
@@ -43,7 +42,7 @@ export default class Dialog extends AutoMover {
 	}
 
 	static get observedAttributes() {
-		return ['hidden'];
+		return ['hidden', 'transitioning'];
 	}
 
 	set hidden(hidden) {
@@ -52,6 +51,14 @@ export default class Dialog extends AutoMover {
 
 	get hidden() {
 		return this.hasAttribute('hidden');
+	}
+
+	set transitioning(transitioning) {
+		this[transitioning ? 'setAttribute' : 'removeAttribute']('transitioning', transitioning);
+	}
+
+	get transitioning() {
+		return this.getAttribute('transitioning');
 	}
 
 	constructor() {
@@ -67,9 +74,10 @@ export default class Dialog extends AutoMover {
 			<style>${style}</style>
 			${template}
 		`;
+
 		this._underlay = this.shadowRoot.getElementById('underlay');
 
-		this._didShow = false;
+		this._isShowing = false;
 	}
 
 	connectedCallback() {
@@ -87,6 +95,10 @@ export default class Dialog extends AutoMover {
 	disconnectedCallback() {
 		super.disconnectedCallback(...arguments);
 
+		if (this.isAutoMoving) {
+			return;
+		}
+
 		if (!this.hidden) {
 			this._hide();
 		}
@@ -101,29 +113,45 @@ export default class Dialog extends AutoMover {
 	}
 
 	_show() {
-		this._underlay.addEventListener('click', this._dismiss);
+		if (this.isAutoMoving || this._isShowing) {
+			return Promise.resolve();
+		}
 
-		updateScrollbarWidth();
-		updateOpenDialogCount(true);
-
-		document.dispatchEvent(new CustomEvent('dialog-connect', { bubbles: true }));
-		this._didShow = true;
+		return waitForTransitions(this, () => {
+			this._isShowing = true;
+			this.transitioning = 'in';
+			this._underlay.addEventListener('click', this._dismiss);
+			updateScrollbarWidth();
+			updateOpenDialogCount(true);
+			document.dispatchEvent(new CustomEvent('dialog-show', { bubbles: true }));
+		}).then(() => {
+			this.transitioning = null;
+		});
 	}
 
 	_hide() {
-		if (!this._didShow) {
-			return;
+		if (this.isAutoMoving || !this._isShowing) {
+			return Promise.resolve();
 		}
 
-		this._underlay.removeEventListener('click', this._dismiss);
-
-		updateOpenDialogCount(false);
-
-		document.dispatchEvent(new CustomEvent('dialog-disconnect', { bubbles: true }));
+		return waitForTransitions(this, () => {
+			this.transitioning = 'out';
+			this._underlay.removeEventListener('click', this._dismiss);
+		}).then(() => {
+			updateOpenDialogCount(false);
+			this.transitioning = null;
+			document.dispatchEvent(new CustomEvent('dialog-hide', { bubbles: true }));
+			this._isShowing = false;
+		});
 	}
 
 	dismiss() {
 		this.dispatchEvent(new CustomEvent('dismiss', { bubbles: true }));
+	}
+
+	remove() {
+		const superRemove = super.remove.bind(this, ...arguments);
+		return this._hide().then(superRemove);
 	}
 }
 

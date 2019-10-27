@@ -1,6 +1,7 @@
-:host {
+#container {
 	position: fixed;
 	right: 0;
 	top: 0;
 	max-width: var(--max-notification-width, 50%);
+	transition: width var(--notification-width-transition-duration, 0.3s);
 }
