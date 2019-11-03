@@ -1,73 +1,15 @@
-import AutoMover from '../helpers/auto-mover';
 import template from './dialog.html';
 import style from './dialog.css';
-import openDialogBodyStyle from './open-dialog-body.css';
-import waitForTransitions from '../helpers/wait-for-transitions';
+import { injectBodyCss, updateScrollbarWidth, updateOpenDialogCount } from './body-scroll-handling';
+import { mixInTransitions, BEFORE_SHOW, AFTER_SHOW, BEFORE_HIDE, AFTER_HIDE } from '../helpers/transition';
+import { reparent } from '../helpers/reparent';
 
-const BODY_STYLE_ID = 'dialog-body-styles';
-
-function updateScrollbarWidth() {
-	const scrollParent = document.createElement('div');
-	const scrollChild = document.createElement('div');
-	scrollParent.style.overflow = 'scroll';
-	scrollParent.append(scrollChild);
-	document.body.append(scrollParent);
-	const scrollbarWidth = scrollParent.offsetWidth - scrollChild.offsetWidth;
-	scrollParent.remove();
-	document.documentElement.style.setProperty('--dialog-scrollbar-width', `${scrollbarWidth}px`)
-}
-
-function injectBodyCss() {
-	document.head.insertAdjacentHTML('afterBegin', `
-		<style id="${BODY_STYLE_ID}">
-			${openDialogBodyStyle}
-		</style>
-	`);
-}
-
-function updateOpenDialogCount(open) {
-	let openDialogs = parseFloat(document.body.dataset.dialogOpenCount) || 0;
-	openDialogs += open ? 1 : -1;
-
-	if (openDialogs === 0) {
-		delete document.body.dataset.dialogOpenCount;
-	} else {
-		document.body.dataset.dialogOpenCount = openDialogs;
-	}
-}
-
-export default class Dialog extends AutoMover {
-	static get destination() {
-		return document.body;
-	}
-
-	static get observedAttributes() {
-		return ['hidden', 'transitioning'];
-	}
-
-	set hidden(hidden) {
-		this[hidden ? 'setAttribute' : 'removeAttribute']('hidden', '');
-	}
-
-	get hidden() {
-		return this.hasAttribute('hidden');
-	}
-
-	set transitioning(transitioning) {
-		this[transitioning ? 'setAttribute' : 'removeAttribute']('transitioning', transitioning);
-	}
-
-	get transitioning() {
-		return this.getAttribute('transitioning');
-	}
-
+class Dialog extends HTMLElement {
 	constructor() {
 		super(...arguments);
 		this._dismiss = this.dismiss.bind(this);
 
-		if (!document.getElementById(BODY_STYLE_ID)) {
-			injectBodyCss();
-		}
+		injectBodyCss();
 
 		this.attachShadow({ mode: 'open' });
 		this.shadowRoot.innerHTML = `
@@ -76,83 +18,39 @@ export default class Dialog extends AutoMover {
 		`;
 
 		this._underlay = this.shadowRoot.getElementById('underlay');
-
-		this._isShowing = false;
+		this._content = this.shadowRoot.getElementById('content');
 	}
 
-	connectedCallback() {
-		super.connectedCallback(...arguments);
+	[BEFORE_SHOW]() {
+		updateScrollbarWidth();
+		updateOpenDialogCount(true);
 
-		if (!this.isConnected || this.isAutoMoving) {
-			return;
-		}
-
-		if (!this.hidden) {
-			this._show();
-		}
+		this._underlay.addEventListener('click', this._dismiss);
+		document.dispatchEvent(new CustomEvent('dialog-show', { bubbles: true }));
 	}
 
-	disconnectedCallback() {
-		super.disconnectedCallback(...arguments);
-
-		if (this.isAutoMoving) {
-			return;
-		}
-
-		if (!this.hidden) {
-			this._hide();
-		}
+	[AFTER_SHOW]() {
+		this._content.focus();
 	}
 
-	attributeChangedCallback(name) {
-		if (this.isConnected) {
-			if (name === 'hidden') {
-				this[this.hidden ? '_hide' : '_show']();
-			}
-		}
+	[BEFORE_HIDE]() {
+		this._underlay.removeEventListener('click', this._dismiss);
 	}
 
-	_show() {
-		if (this.isAutoMoving || this._isShowing) {
-			return Promise.resolve();
-		}
-
-		return waitForTransitions(this, () => {
-			this._isShowing = true;
-			this.transitioning = 'in';
-			this._underlay.addEventListener('click', this._dismiss);
-			updateScrollbarWidth();
-			updateOpenDialogCount(true);
-			document.dispatchEvent(new CustomEvent('dialog-show', { bubbles: true }));
-		}).then(() => {
-			this.transitioning = null;
-		});
-	}
-
-	_hide() {
-		if (this.isAutoMoving || !this._isShowing) {
-			return Promise.resolve();
-		}
-
-		return waitForTransitions(this, () => {
-			this.transitioning = 'out';
-			this._underlay.removeEventListener('click', this._dismiss);
-		}).then(() => {
-			updateOpenDialogCount(false);
-			this.transitioning = null;
-			document.dispatchEvent(new CustomEvent('dialog-hide', { bubbles: true }));
-			this._isShowing = false;
-		});
+	[AFTER_HIDE]() {
+		updateOpenDialogCount(false);
+		document.dispatchEvent(new CustomEvent('dialog-hide', { bubbles: true }));
 	}
 
 	dismiss() {
 		this.dispatchEvent(new CustomEvent('dismiss', { bubbles: true }));
 	}
-
-	remove() {
-		const superRemove = super.remove.bind(this, ...arguments);
-		return this._hide().then(superRemove);
-	}
 }
 
-customElements.define('bc-dialog', Dialog);
+const EnhancedDialog = reparent(mixInTransitions(Dialog), function(dialog) {
+	dialog.ownerDocument.body.append(dialog);
+});
+
+customElements.define('bc-dialog', EnhancedDialog);
+
+export default EnhancedDialog;

@@ -10,17 +10,13 @@
 <script src="../index.js"></script>
 
 <style>
-	:root {
-		--custom-underlay: #0002;
-	}
-
 	body {
 		font-family: serif;
 		margin: 1em;
 	}
 
 	bc-sidebar-layout {
-		--sidebar-underlay-background: var(--custom-underlay);
+		--sidebar-underlay-background: #8888;
 	}
 
 	.sidebar {
@@ -49,8 +45,8 @@
 	}
 
 	bc-dialog {
-		--dialog-underlay-background: var(--custom-underlay);
-		--dialog-underlay-fade-duration: 0.1s;
+		--dialog-underlay-background: #8888;
+		--dialog-underlay-fade-duration: 0.5s;
 	}
 
 	.dialog-content {
@@ -61,24 +57,27 @@
 		opacity: 1;
 		overflow: auto;
 		padding: 1em;
-		transition: opacity 0.2s, transform 0.2s;
-	}
-
-	bc-dialog[transitioning] > .dialog-content {
-		opacity: 0;
+		transform: scale(1);
+		transition: opacity 0.5s, transform 0.5s;
 	}
 
 	bc-dialog[transitioning="in"] > .dialog-content {
-		transform: scale(1.1);
+		opacity: 0;
+		transform: scale(1.2);
 	}
 
 	bc-dialog[transitioning="out"] > .dialog-content {
-		transform: scale(0.8);
+		opacity: 0;
+		transform: scale(0.7);
+	}
+
+	bc-notification-host {
+		--notification-width-transition-duration: 1s;
 	}
 
 	.notification-content {
-		backdrop-filter: blur(1px);
-		background: #888e;
+		backdrop-filter: blur(3px);
+		background: #666c;
 		border-radius: 3px;
 		color: white;
 		font-family: sans-serif;
@@ -86,7 +85,7 @@
 		margin: 1em;
 		opacity: 1;
 		padding: 1em;
-		transition: margin-bottom 0.3s, opacity 0.3s, transform 0.3s;
+		transition: margin-bottom 1s, opacity 1s, transform 1s;
 	}
 
 	bc-notification[transitioning] > .notification-content {
@@ -105,10 +104,14 @@
 </style>
 
 <bc-dialog-safe-area>
-	<bc-sidebar-layout open id="sidebar-layout">
+	<bc-sidebar-layout id="sidebar-layout">
 		<div slot="sidebar" class="sidebar">
 			<button type="button" onclick="document.getElementById('sidebar-layout').open = false">&times; Close</button>
+			<br>
 			<button type="button" onclick="createADialog()">Create a new dialog</button>
+			<br>
+			<button type="button" onclick="document.getElementById('existing-dialog').hidden = false;">Open an existing dialog</button>
+			<br>
 			<button type="button" onclick="createANotification()">Create a new notification</button>
 			<p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Nulla architecto odit ducimus quod natus accusantium incidunt vitae praesentium amet enim, ipsa at eveniet neque quis reprehenderit vero reiciendis veritatis voluptates!</p>
 			<p>Expedita aut harum, aliquam alias cumque nam blanditiis praesentium tenetur voluptatum voluptatibus libero et tempora, placeat ex mollitia repudiandae doloremque eligendi aliquid odit ea corrupti sit. Voluptas tempore atque assumenda?</p>
@@ -119,12 +122,13 @@
 			<button type="button" onclick="document.getElementById('sidebar-layout').toggle()">&#9776; Menu</button>
 			<button type="button" onclick="createADialog()">Create a new dialog</button>
 			<button type="button" onclick="document.getElementById('existing-dialog').hidden = false;">Open an existing dialog</button>
+			<button type="button" onclick="createANotification()">Create a new notification</button>
 		</div>
 
 		<bc-dialog id="existing-dialog" hidden>
 			<div class="dialog-content">
 				<p>This dialog already exists</p>
-				<button type="button" onclick="document.getElementById('existing-dialog').hidden = true;">Close it</button>
+				<button type="button" onclick="document.getElementById('existing-dialog').dismiss();">Close it</button>
 			</div>
 		</bc-dialog>
 
@@ -164,7 +168,7 @@
 </bc-dialog-safe-area>
 
 <template id="dialog-template">
-	<bc-dialog id="new-dialog">
+	<bc-dialog>
 		<div class="dialog-content">
 			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consequatur hic eligendi aliquam praesentium, voluptas sit dolor cupiditate unde nulla necessitatibus totam perspiciatis in numquam facilis, magnam excepturi tenetur provident consequuntur.</p>
 			<p>Vero qui incidunt accusantium suscipit, ex quasi repellendus tenetur veniam hic quo similique rerum obcaecati expedita ea eius molestias dolores ab ducimus ipsum praesentium placeat mollitia error blanditiis repellat. Aspernatur!</p>
@@ -222,6 +226,7 @@
 		const loremIpsum = generateRandomText();
 		const template = document.getElementById('notification-template').innerHTML;
 		const filledTemplate = template.replace('__LOREM_IPSUM__', loremIpsum);
+		const notificationHost = document.querySelector('bc-notification-host');
 		document.body.insertAdjacentHTML('beforeEnd', filledTemplate);
 	}
 

@@ -1,4 +1,4 @@
-export default function waitForTransitions(element, setup, DELAY = 50) {
+export default function waitForTransitions(element, setup, delay = 50) {
 	return new Promise(resolve => {
 		const targets = [element, element.shadowRoot];
 
@@ -36,6 +36,6 @@ export default function waitForTransitions(element, setup, DELAY = 50) {
 			if (transitions.length === 0) {
 				resolve();
 			}
-		}, DELAY);
+		}, delay);
 	});
 }

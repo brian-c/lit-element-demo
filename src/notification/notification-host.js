@@ -1,9 +1,9 @@
-import AutoMover from "../helpers/auto-mover";
+// import AutoMover from "../helpers/auto-mover";
 import template from './notification-host.html';
 import style from './notification-host.css';
-import waitForTransitions from '../helpers/wait-for-transitions';
+import { reparent } from '../helpers/reparent';
 
-export default class NotificationHost extends AutoMover {
+class NotificationHost extends HTMLElement {
 	static get destination() {
 		return document.body;
 	}
@@ -23,8 +23,6 @@ export default class NotificationHost extends AutoMover {
 	}
 
 	connectedCallback() {
-		super.connectedCallback(...arguments);
-
 		if (!this.isConnected) {
 			return;
 		}
@@ -46,8 +44,6 @@ export default class NotificationHost extends AutoMover {
 	}
 
 	disconnectedCallback() {
-		super.connectedCallback(...arguments);
-
 		if (this.isAutoMoving) {
 			return;
 		}
@@ -88,4 +84,11 @@ export default class NotificationHost extends AutoMover {
 	}
 }
 
-customElements.define('bc-notification-host', NotificationHost);
+const EnhancedNotificationHost = reparent(NotificationHost, function(notificationHost) {
+	const document = notificationHost.ownerDocument;
+	document.body.append(notificationHost);
+});
+
+customElements.define('bc-notification-host', EnhancedNotificationHost);
+
+export default EnhancedNotificationHost;

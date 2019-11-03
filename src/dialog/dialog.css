@@ -1,5 +1,4 @@
 :host([transitioning]) {
-	display: block !important;
 	pointer-events: none;
 }
 
