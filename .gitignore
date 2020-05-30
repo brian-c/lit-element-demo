@@ -1,9 +1,8 @@
-/.cache/
-/dist
 /node_modules
 
-# For now
-/package-lock.json
+# Parcel
+/.cache
+/dist
 
-# Built files:
+# Rollup
 /index.js

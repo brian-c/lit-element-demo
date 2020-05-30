@@ -1,14 +1,14 @@
 {
 	"devDependencies": {
-		"@webcomponents/webcomponentsjs": "^2.3.0",
-		"autoprefixer": "^9.6.4",
+		"@webcomponents/webcomponentsjs": "^2.4.3",
+		"autoprefixer": "^9.8.0",
 		"cssnano": "^4.1.10",
 		"npm-run-all": "^4.1.5",
 		"parcel-bundler": "^1.12.4",
-		"rollup": "^1.23.1",
+		"rollup": "^1.32.1",
 		"rollup-plugin-html": "^0.2.1",
-		"rollup-plugin-postcss": "^2.0.3",
-		"wicg-inert": "^3.0.0"
+		"rollup-plugin-postcss": "^2.9.0",
+		"wicg-inert": "^3.0.3"
 	},
 	"scripts": {
 		"start": "npm-run-all --parallel watch serve-demo",
